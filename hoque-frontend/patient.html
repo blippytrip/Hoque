@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HOQUE — Patient</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: var(--bg);
+      position: relative;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 48px 48px;
+      opacity: 0.2;
+      pointer-events: none;
+    }
+
+    .patient-wrap {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 480px;
+      padding: 20px;
+      animation: fadeUp 0.45s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .patient-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .patient-header .wordmark {
+      font-family: 'Fraunces', serif;
+      font-size: 32px;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 2px;
+      display: block;
+    }
+
+    .patient-header .subtitle {
+      display: block;
+      margin-top: 6px;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--muted);
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 11px;
+      font-family: 'DM Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    .field label {
+      display: block;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .field input {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .field input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(74,243,196,0.08);
+    }
+
+    .field input::placeholder { color: var(--muted); }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    /* ── RESULT CARD ── */
+    .result-card {
+      display: none;
+      animation: fadeUp 0.3s ease both;
+    }
+
+    .result-card.show { display: block; }
+
+    .position-display {
+      text-align: center;
+      padding: 12px 0 24px;
+    }
+
+    .position-number {
+      font-family: 'Fraunces', serif;
+      font-size: 72px;
+      font-weight: 300;
+      color: var(--accent);
+      line-height: 1;
+      display: block;
+    }
+
+    .position-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--muted);
+      margin-top: 8px;
+      display: block;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 20px 0;
+    }
+
+    .info-rows { display: flex; flex-direction: column; gap: 12px; }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .info-row .key {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+    }
+
+    .info-row .val {
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: 'DM Mono', monospace;
+    }
+    .badge-emergency { background: rgba(243,106,74,0.15); color: var(--danger); }
+    .badge-urgent    { background: rgba(243,194,74,0.15);  color: var(--warn); }
+    .badge-normal    { background: rgba(74,243,196,0.1);   color: var(--accent); }
+    .badge-waiting   { background: rgba(90,106,128,0.2);   color: var(--muted); }
+    .badge-active    { background: rgba(243,194,74,0.12);  color: var(--warn); }
+    .badge-done      { background: rgba(74,243,196,0.12);  color: var(--accent); }
+
+    .status-msg {
+      text-align: center;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-top: 16px;
+    }
+
+    .status-msg.waiting   { background: rgba(90,106,128,0.15); color: var(--muted); }
+    .status-msg.active    { background: rgba(243,194,74,0.1);  color: var(--warn); }
+    .status-msg.completed { background: rgba(74,243,196,0.1);  color: var(--accent); }
+
+    .logout-link {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .logout-link button {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+    .logout-link button:hover { color: var(--danger); }
+
+    #errorMsg {
+      margin-top: 14px;
+      padding: 10px 14px;
+      background: rgba(243,106,74,0.1);
+      border: 1px solid rgba(243,106,74,0.25);
+      border-radius: 8px;
+      color: var(--danger);
+      font-size: 13px;
+      display: none;
+    }
+    #errorMsg.show { display: block; }
+  </style>
+</head>
+<body>
+
+  <div class="patient-wrap">
+    <div class="patient-header">
+      <span class="wordmark">HOQUE</span>
+      <span class="subtitle">Patient Portal</span>
+    </div>
+
+    <!-- Search card -->
+    <div class="card">
+      <div class="card-title">Check your queue position</div>
+      <div class="field">
+        <label>Your name</label>
+        <input type="text" id="patientName" placeholder="Enter your full name"
+          onkeydown="if(event.key==='Enter') checkPosition()">
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" style="flex:1" onclick="checkPosition()">Check Position</button>
+      </div>
+      <div id="errorMsg"></div>
+    </div>
+
+    <!-- Result card -->
+    <div class="card result-card" id="resultCard">
+      <div class="position-display" id="positionDisplay"></div>
+      <hr class="divider">
+      <div class="info-rows" id="infoRows"></div>
+      <div id="statusMsg"></div>
+    </div>
+
+    <div class="logout-link">
+      <button onclick="logout()">↩ Sign out</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    const token = getToken();
+    if (!token) { window.location.href = 'index.html'; }
+
+    function priorityBadge(p) {
+      if (p === 3) return '<span class="badge badge-emergency">● Emergency</span>';
+      if (p === 2) return '<span class="badge badge-urgent">● Urgent</span>';
+      return '<span class="badge badge-normal">● Normal</span>';
+    }
+
+    function statusBadge(s) {
+      if (s === 'in-consultation') return '<span class="badge badge-active">In Consultation</span>';
+      if (s === 'completed')       return '<span class="badge badge-done">Completed</span>';
+      return '<span class="badge badge-waiting">Waiting</span>';
+    }
+
+    async function checkPosition() {
+      const name = document.getElementById('patientName').value.trim();
+      const errEl = document.getElementById('errorMsg');
+      errEl.classList.remove('show');
+
+      if (!name) {
+        errEl.textContent = 'Please enter your name.';
+        errEl.classList.add('show');
+        return;
+      }
+
+      const res = await fetch(`${BASE_URL}/patients/name/${encodeURIComponent(name)}/position`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        errEl.textContent = data.message || 'Patient not found. Please check your name.';
+        errEl.classList.add('show');
+        document.getElementById('resultCard').classList.remove('show');
+        return;
+      }
+
+      // Populate result
+      const status = data.status || 'waiting';
+      const position = data.position;
+      const priority = data.priority;
+      const total = data.totalActivePatients;
+
+      const posDisp = document.getElementById('positionDisplay');
+      if (status === 'completed') {
+        posDisp.innerHTML = `
+          <span class="position-number" style="color:var(--accent); font-size:48px">✓</span>
+          <span class="position-label">Consultation complete</span>`;
+      } else if (status === 'in-consultation') {
+        posDisp.innerHTML = `
+          <span class="position-number" style="font-size:48px">Now</span>
+          <span class="position-label">In consultation</span>`;
+      } else {
+        posDisp.innerHTML = `
+          <span class="position-number">${position}</span>
+          <span class="position-label">Position in queue</span>`;
+      }
+
+      document.getElementById('infoRows').innerHTML = `
+        <div class="info-row">
+          <span class="key">Patient</span>
+          <span class="val">${data.patient}</span>
+        </div>
+        <div class="info-row">
+          <span class="key">Status</span>
+          <span class="val">${statusBadge(status)}</span>
+        </div>
+        <div class="info-row">
+          <span class="key">Priority</span>
+          <span class="val">${priorityBadge(priority)}</span>
+        </div>
+        <div class="info-row">
+          <span class="key">Active Patients</span>
+          <span class="val" style="font-family:'DM Mono',monospace">${total}</span>
+        </div>`;
+
+      const msgEl = document.getElementById('statusMsg');
+      if (status === 'waiting') {
+        const ahead = position - 1;
+        msgEl.className = 'status-msg waiting';
+        msgEl.textContent = ahead > 0
+          ? `${ahead} patient${ahead > 1 ? 's' : ''} ahead of you. Please remain nearby.`
+          : `You are next — please be ready.`;
+      } else if (status === 'in-consultation') {
+        msgEl.className = 'status-msg active';
+        msgEl.textContent = 'You are currently being seen. Please follow staff instructions.';
+      } else {
+        msgEl.className = 'status-msg completed';
+        msgEl.textContent = 'Your visit is complete. Thank you for visiting HOQUE.';
+      }
+
+      document.getElementById('resultCard').classList.add('show');
+    }
+  </script>
+</body>
+</html>

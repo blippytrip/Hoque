@@ -1,0 +1,117 @@
+/* ══════════════════════════════════════════
+   HOQUE — Shared Design System
+   ══════════════════════════════════════════ */
+
+/* ── VARIABLES ── */
+:root {
+  --bg:        #0c0f14;
+  --surface:   #13181f;
+  --elevated:  #1a2130;
+  --border:    #232c3a;
+  --text:      #d8e0ea;
+  --muted:     #5a6a80;
+  --accent:    #4af3c4;
+  --accent-dim:#1a5c4a;
+  --danger:    #f36a4a;
+  --warn:      #f3c24a;
+}
+
+/* ── RESET ── */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ── BASE ── */
+body {
+  font-family: 'DM Sans', 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── TYPOGRAPHY ── */
+h1, h2, h3 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 300;
+}
+
+/* ── INPUTS ── */
+input, select {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+input:focus, select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(74, 243, 196, 0.08);
+}
+
+input::placeholder { color: var(--muted); }
+
+select option { background: var(--elevated); }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #0c0f14;
+}
+.btn-primary:hover {
+  background: #6ffad6;
+  transform: translateY(-1px);
+}
+.btn-primary:active { transform: translateY(0); }
+
+.btn-ghost {
+  background: var(--elevated);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn-danger {
+  background: rgba(243, 106, 74, 0.12);
+  color: var(--danger);
+  border: 1px solid rgba(243, 106, 74, 0.25);
+}
+.btn-danger:hover { background: rgba(243, 106, 74, 0.22); }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* ── SELECTION ── */
+::selection { background: rgba(74, 243, 196, 0.2); color: var(--text); }

@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HOQUE — Doctor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { display: flex; overflow: hidden; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 220px;
+      min-height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .sidebar-logo { padding: 28px 24px 20px; border-bottom: 1px solid var(--border); }
+    .sidebar-logo .wordmark {
+      font-family: 'Fraunces', serif;
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 1px;
+    }
+    .sidebar-logo .role-badge {
+      display: inline-block;
+      margin-top: 6px;
+      font-size: 10px;
+      font-family: 'DM Mono', monospace;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    .sidebar-footer { padding: 16px 12px; border-top: 1px solid var(--border); margin-top: auto; }
+    .logout-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--muted);
+      background: none;
+      border: none;
+      width: 100%;
+      transition: background 0.15s, color 0.15s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .logout-btn:hover { background: rgba(243,106,74,0.1); color: var(--danger); }
+
+    /* ── MAIN ── */
+    .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+
+    .topbar { padding: 28px 36px 0; }
+    .page-title {
+      font-family: 'Fraunces', serif;
+      font-size: 28px;
+      font-weight: 300;
+      color: var(--text);
+    }
+    .page-title em { font-style: italic; color: var(--accent); }
+
+    .page-content { padding: 28px 36px 48px; }
+
+    /* ── DOCTOR PICKER ── */
+    .doctor-select-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .doctor-select-row > div { flex: 1; }
+    .doctor-select-row label {
+      display: block;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .doctor-select-row select { margin: 0; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .card-title {
+      font-size: 11px;
+      font-family: 'DM Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    /* ── QUEUE TABLE ── */
+    .queue-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .queue-table th {
+      text-align: left;
+      padding: 10px 14px;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    .queue-table td {
+      padding: 13px 14px;
+      border-bottom: 1px solid rgba(35,44,58,0.6);
+      vertical-align: middle;
+    }
+    .queue-table tr:last-child td { border-bottom: none; }
+    .queue-table tbody tr { transition: background 0.1s; cursor: pointer; }
+    .queue-table tbody tr:hover { background: var(--elevated); }
+    .queue-table tbody tr.selected { background: var(--accent-dim); }
+
+    /* ── BADGES ── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: 'DM Mono', monospace;
+    }
+    .badge-emergency { background: rgba(243,106,74,0.15); color: var(--danger); }
+    .badge-urgent    { background: rgba(243,194,74,0.15);  color: var(--warn); }
+    .badge-normal    { background: rgba(74,243,196,0.1);   color: var(--accent); }
+
+    /* ── ACTION CARD ── */
+    .action-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .action-info { font-size: 14px; }
+    .action-info .patient-name {
+      font-family: 'Fraunces', serif;
+      font-size: 22px;
+      font-weight: 300;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .action-info .patient-meta { color: var(--muted); font-size: 13px; }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .empty-state .empty-icon { font-size: 32px; margin-bottom: 12px; opacity: 0.4; }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed;
+      bottom: 28px; right: 28px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      z-index: 1000;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.25s ease;
+      pointer-events: none;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.success { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(74,243,196,0.3); }
+    #toast.error   { background: rgba(243,106,74,0.15); color: var(--danger); border: 1px solid rgba(243,106,74,0.3); }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="wordmark">HOQUE</div>
+      <span class="role-badge">Doctor</span>
+    </div>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="logout()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+        </svg>
+        Sign out
+      </button>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <h1 class="page-title">My <em>Queue</em></h1>
+    </div>
+    <div class="page-content">
+
+      <!-- Doctor selector -->
+      <div class="doctor-select-row">
+        <div>
+          <label>Select Doctor Profile</label>
+          <select id="doctorSelect"></select>
+        </div>
+        <button class="btn btn-primary" onclick="loadQueue()">Load Queue</button>
+      </div>
+
+      <!-- Active patient action -->
+      <div id="actionWrap" style="display:none; margin-bottom: 20px;">
+        <div class="action-card">
+          <div class="action-info">
+            <div class="patient-name" id="selectedPatientName">—</div>
+            <div class="patient-meta" id="selectedPatientMeta">Select a patient from the queue below</div>
+          </div>
+          <button class="btn btn-primary" id="completeBtn" onclick="completePatient()" disabled>
+            Mark Complete
+          </button>
+        </div>
+      </div>
+
+      <!-- Queue table -->
+      <div class="card">
+        <div class="card-title" id="queueCardTitle">Queue</div>
+        <div id="queueWrap">
+          <div class="empty-state">
+            <div class="empty-icon">⚕</div>
+            Select your profile and click "Load Queue"
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script src="script.js"></script>
+  <script>
+    const token = getToken();
+    if (!token) { window.location.href = 'index.html'; }
+
+    let selectedPatientId = null;
+
+    function toast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = `show ${type}`;
+      setTimeout(() => t.className = '', 2800);
+    }
+
+    function priorityBadge(p) {
+      if (p === 3) return '<span class="badge badge-emergency">● Emergency</span>';
+      if (p === 2) return '<span class="badge badge-urgent">● Urgent</span>';
+      return '<span class="badge badge-normal">● Normal</span>';
+    }
+
+    async function loadDoctors() {
+      const res = await fetch(`${BASE_URL}/doctors`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const doctors = await res.json();
+      const select = document.getElementById('doctorSelect');
+      select.innerHTML = '<option value="">— choose profile —</option>';
+      doctors.forEach(d => {
+        const o = document.createElement('option');
+        o.value = d._id;
+        o.textContent = `Dr. ${d.name}${d.specialization ? ' · ' + d.specialization : ''}`;
+        select.appendChild(o);
+      });
+    }
+
+    async function loadQueue() {
+      const doctorId = document.getElementById('doctorSelect').value;
+      if (!doctorId) { toast('Select a doctor profile first', 'error'); return; }
+
+      let data;
+      try {
+        const res = await fetch(`${BASE_URL}/patients/doctor/${doctorId}/queue`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        data = await res.json();
+        if (!res.ok) { toast(data.message || 'Failed to load queue', 'error'); return; }
+      } catch {
+        toast('Network error — is the server running?', 'error');
+        return;
+      }
+
+      // API returns: { doctorId, totalPatients, queue: [{ _id, name, priority, status, position }] }
+      const queue = data.queue || [];
+
+      // Reset selection whenever queue reloads
+      selectedPatientId = null;
+      document.getElementById('selectedPatientName').textContent = '—';
+      document.getElementById('selectedPatientMeta').textContent = 'Select a patient from the queue below';
+      document.getElementById('completeBtn').disabled = true;
+
+      document.getElementById('actionWrap').style.display = 'flex';
+      document.getElementById('queueCardTitle').textContent =
+        `Queue · ${queue.length} patient${queue.length !== 1 ? 's' : ''}`;
+
+      const wrap = document.getElementById('queueWrap');
+      if (!queue.length) {
+        wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">✓</div>Queue is clear — no waiting patients</div>';
+        return;
+      }
+
+      // getDoctorQueue only returns: _id, name, priority, status, position
+      // Sort: emergency (3) first, then urgent (2), then normal (1)
+      const sorted = [...queue].sort((a, b) => b.priority - a.priority);
+
+      wrap.innerHTML = `
+        <table class="queue-table">
+          <thead>
+            <tr>
+              <th>Pos</th>
+              <th>Patient</th>
+              <th>Priority</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${sorted.map((p, i) => `
+              <tr onclick="selectPatient('${p._id}', '${p.name.replace(/'/g, "\\'")}'  , ${p.priority}, '${p.status}')"
+                  id="row-${p._id}">
+                <td style="color:var(--muted);font-family:'DM Mono',monospace">${i + 1}</td>
+                <td><strong>${p.name}</strong></td>
+                <td>${priorityBadge(p.priority)}</td>
+                <td>${statusBadge(p.status)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>`;
+    }
+
+    function statusBadge(s) {
+      if (s === 'in-consultation') return '<span class="badge badge-urgent">● Active</span>';
+      return '<span class="badge badge-normal">● Waiting</span>';
+    }
+
+    function selectPatient(id, name, priority, status) {
+      selectedPatientId = id;
+      document.querySelectorAll('.queue-table tbody tr').forEach(r => r.classList.remove('selected'));
+      const row = document.getElementById('row-' + id);
+      if (row) row.classList.add('selected');
+
+      document.getElementById('selectedPatientName').textContent = name;
+      document.getElementById('selectedPatientMeta').textContent =
+        `Priority: ${priority === 3 ? 'Emergency' : priority === 2 ? 'Urgent' : 'Normal'} · Status: ${status}`;
+      document.getElementById('completeBtn').disabled = false;
+    }
+
+    async function completePatient() {
+      if (!selectedPatientId) return;
+      const doctorId = document.getElementById('doctorSelect').value;
+
+      let res, data;
+      try {
+        res = await fetch(`${BASE_URL}/patients/${selectedPatientId}/complete`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ doctorId })
+        });
+        data = await res.json();
+      } catch {
+        toast('Network error', 'error');
+        return;
+      }
+
+      if (res.ok) {
+        toast('Patient marked as complete');
+        selectedPatientId = null;
+        await loadQueue();
+      } else {
+        // Show the actual server error so it's debuggable
+        toast(data.message || 'Could not complete patient', 'error');
+      }
+    }
+
+    loadDoctors();
+  </script>
+</body>
+</html>

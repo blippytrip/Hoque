@@ -1,0 +1,13 @@
+{
+  "name": "hoque",
+  "version": "1.0.0",
+  "scripts": {
+    "backend": "cd hoque-backend && npm run dev",
+    "start": "cd hoque-backend && npm run dev",
+    "frontend:react": "cd hoque-frontend-react && npm run dev",
+    "dev": "concurrently \"cd hoque-backend && npm run dev\" \"cd hoque-frontend-react && npm run dev\""
+  },
+  "dependencies": {
+    "concurrently": "^8.0.0"
+  }
+}
