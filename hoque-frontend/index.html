@@ -1,17 +1,231 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>HoQue Hospital Login</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HOQUE — Sign In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: var(--bg);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Subtle grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 48px 48px;
+      opacity: 0.25;
+      pointer-events: none;
+    }
+
+    /* Glow orb */
+    body::after {
+      content: '';
+      position: fixed;
+      top: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(74,243,196,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .login-wrap {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 400px;
+      padding: 20px;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .login-wordmark {
+      font-family: 'Fraunces', serif;
+      font-size: 42px;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 3px;
+      line-height: 1;
+      display: block;
+    }
+
+    .login-tagline {
+      display: block;
+      margin-top: 8px;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 2.5px;
+      color: var(--muted);
+    }
+
+    .login-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px;
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    .field label {
+      display: block;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .field input {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .field input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(74,243,196,0.08);
+    }
+
+    .field input::placeholder { color: var(--muted); }
+
+    .login-btn {
+      width: 100%;
+      padding: 13px;
+      margin-top: 8px;
+      background: var(--accent);
+      color: #0c0f14;
+      border: none;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.15s;
+      letter-spacing: 0.3px;
+    }
+
+    .login-btn:hover {
+      background: #6ffad6;
+      transform: translateY(-1px);
+    }
+
+    .login-btn:active { transform: translateY(0); }
+
+    .error-msg {
+      margin-top: 16px;
+      padding: 10px 14px;
+      background: rgba(243,106,74,0.12);
+      border: 1px solid rgba(243,106,74,0.3);
+      border-radius: 8px;
+      color: var(--danger);
+      font-size: 13px;
+      text-align: center;
+      display: none;
+    }
+
+    .error-msg.show { display: block; }
+
+    .login-footer {
+      text-align: center;
+      margin-top: 28px;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 1px;
+    }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Hospital Login</h2>
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Password">
-    <button onclick="login()">Login</button>
+  <div class="login-wrap">
+    <div class="login-header">
+      <span class="login-wordmark">HOQUE</span>
+      <span class="login-tagline">Hospital Queue Management</span>
+    </div>
+
+    <div class="login-card">
+      <div class="field">
+        <label>Email address</label>
+        <input type="email" id="email" placeholder="you@hospital.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="••••••••" autocomplete="current-password"
+          onkeydown="if(event.key==='Enter') login()">
+      </div>
+      <button class="login-btn" onclick="login()">Sign In</button>
+      <div class="error-msg" id="errorMsg"></div>
+    </div>
+
+    <div class="login-footer">Secure staff portal · v2.0</div>
   </div>
 
   <script src="script.js"></script>
+  <script>
+    // Override login to show inline error instead of alert
+    async function login() {
+      const email    = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const errorEl  = document.getElementById('errorMsg');
+      errorEl.classList.remove('show');
+
+      const res = await fetch(`${BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        errorEl.textContent = data.message || 'Invalid credentials. Please try again.';
+        errorEl.classList.add('show');
+        return;
+      }
+
+      saveToken(data.token);
+      const payload = JSON.parse(atob(data.token.split('.')[1]));
+      const role = payload.role;
+
+      if (role === 'receptionist') window.location.href = 'receptionist.html';
+      else if (role === 'doctor')  window.location.href = 'doctor.html';
+      else if (role === 'patient') window.location.href = 'patient.html';
+    }
+  </script>
 </body>
 </html>
