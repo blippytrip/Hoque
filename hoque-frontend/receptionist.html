@@ -592,6 +592,8 @@
 
       <!-- ── BILLING PANEL ── -->
       <div class="panel" id="panel-billing">
+
+        <!-- New Transaction -->
         <div class="card">
           <div class="card-title">New Transaction</div>
           <div class="form-grid">
@@ -601,13 +603,11 @@
             </div>
             <div>
               <label>Doctor (auto-filled from patient)</label>
-              <!-- Read-only: backend requires patient's assigned doctor exactly -->
-              <input id="txDoctorDisplay" placeholder="Select a patient first" readonly
-                style="cursor:default; opacity:0.7;">
+              <input id="txDoctorDisplay" placeholder="Select a patient first" readonly style="cursor:default;opacity:0.7;">
               <input type="hidden" id="txDoctor">
             </div>
           </div>
-          <div class="form-grid">
+          <div class="form-grid triple">
             <div>
               <label>Amount (₹)</label>
               <input id="txAmount" type="number" min="0" step="0.01" placeholder="0.00">
@@ -616,17 +616,75 @@
               <label>Date</label>
               <input id="txDate" type="date">
             </div>
+            <div>
+              <label>Notes (optional)</label>
+              <input id="txNotes" placeholder="e.g. Cash payment">
+            </div>
           </div>
           <div class="btn-row">
             <button class="btn btn-primary" onclick="createTransaction()">Record Payment</button>
-            <button class="btn btn-ghost" onclick="loadTransactions()">Refresh History</button>
           </div>
         </div>
 
+        <!-- Filters + History -->
         <div class="card">
           <div class="card-title">Transaction History</div>
-          <div id="txHistoryWrap"><div class="empty-state">Click "Refresh History" to load</div></div>
+
+          <!-- Filter row -->
+          <div class="form-grid" style="margin-bottom:16px">
+            <div>
+              <label>Filter by Status</label>
+              <select id="filterStatus">
+                <option value="">All statuses</option>
+                <option value="pending">Pending</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+            <div>
+              <label>Filter by Doctor</label>
+              <select id="filterDoctor">
+                <option value="">All doctors</option>
+              </select>
+            </div>
+            <div>
+              <label>Filter by Patient</label>
+              <select id="filterPatient">
+                <option value="">All patients</option>
+              </select>
+            </div>
+            <div style="display:flex;align-items:flex-end">
+              <button class="btn btn-ghost" style="width:100%" onclick="loadTransactions()">Apply Filters</button>
+            </div>
+          </div>
+
+          <div id="txHistoryWrap"><div class="empty-state">Click "Apply Filters" to load</div></div>
         </div>
+
+        <!-- Update status of a selected transaction -->
+        <div class="card" id="txUpdateCard" style="display:none">
+          <div class="card-title">Update Transaction Status</div>
+          <div class="form-grid">
+            <div>
+              <label>Transaction</label>
+              <input id="txUpdateDisplay" readonly style="cursor:default;opacity:0.7;">
+              <input type="hidden" id="txUpdateId">
+            </div>
+            <div>
+              <label>New Status</label>
+              <select id="txUpdateStatus">
+                <option value="pending">Pending</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="updateTransactionStatus()">Update Status</button>
+            <button class="btn btn-ghost" onclick="clearTxUpdate()">Cancel</button>
+          </div>
+        </div>
+
       </div>
 
       <!-- ── USERS PANEL ── -->
@@ -757,7 +815,7 @@
       const res = await fetch(`${BASE_URL}/doctors`);
       allDoctors = await res.json();
 
-      // Only populate patient-panel dropdowns and doctor CRUD select
+      // Patient-panel + doctor CRUD selects
       const selectors = ['ptDoctorSelect', 'ptEditDoctor', 'docSelect'];
       selectors.forEach(id => {
         const el = document.getElementById(id);
@@ -769,6 +827,16 @@
           o.textContent = (isDoc ? '' : 'Dr. ') + d.name + (d.specialization ? ` — ${d.specialization}` : '');
           el.appendChild(o);
         });
+      });
+
+      // Billing filter dropdown
+      const filterDoc = document.getElementById('filterDoctor');
+      filterDoc.innerHTML = '<option value="">All doctors</option>';
+      allDoctors.forEach(d => {
+        const o = document.createElement('option');
+        o.value = d._id;
+        o.textContent = `Dr. ${d.name}`;
+        filterDoc.appendChild(o);
       });
     }
 
@@ -819,7 +887,7 @@
           </table>`;
       }
 
-      // Dropdowns for patients panel + billing
+      // Dropdowns for patients panel + billing new-tx
       allPatients = patients;
       ['ptSelect', 'txPatient'].forEach(id => {
         const el = document.getElementById(id);
@@ -829,13 +897,25 @@
           const o = document.createElement('option');
           o.value = p._id;
           o.textContent = `${p.name} (${p.status})`;
-          // Store doctorAssigned id+name as data attributes for billing auto-fill
           o.dataset.doctorId   = p.doctorAssigned?._id   || p.doctorAssigned || '';
           o.dataset.doctorName = p.doctorAssigned?.name  || '';
           el.appendChild(o);
         });
         if (cur) el.value = cur;
       });
+
+      // Billing filter patient dropdown
+      const filterPt = document.getElementById('filterPatient');
+      const curFilter = filterPt.value;
+      filterPt.innerHTML = '<option value="">All patients</option>';
+      patients.forEach(p => {
+        const o = document.createElement('option');
+        o.value = p._id;
+        o.textContent = p.name;
+        filterPt.appendChild(o);
+      });
+      if (curFilter) filterPt.value = curFilter;
+
       // Re-trigger billing auto-fill if a patient was already selected
       onTxPatientChange();
     }
@@ -968,14 +1048,11 @@
 
     // ── BILLING ──
 
-    // When a patient is selected in billing, auto-fill their assigned doctor
-    // (backend enforces patient.doctorAssigned === doctor, so we can't let user pick freely)
     function onTxPatientChange() {
       const sel = document.getElementById('txPatient');
       const opt = sel.options[sel.selectedIndex];
       const doctorId   = opt?.dataset?.doctorId   || '';
       const doctorName = opt?.dataset?.doctorName  || '';
-
       document.getElementById('txDoctor').value = doctorId;
       document.getElementById('txDoctorDisplay').value = doctorId
         ? `Dr. ${doctorName}`
@@ -988,37 +1065,57 @@
       const doctor  = document.getElementById('txDoctor').value;
       const amount  = document.getElementById('txAmount').value;
       const date    = document.getElementById('txDate').value;
+      const notes   = document.getElementById('txNotes').value.trim();
 
       if (!patient) { toast('Select a patient', 'error'); return; }
       if (!doctor)  { toast('This patient has no assigned doctor', 'error'); return; }
       if (!date)    { toast('Select a transaction date', 'error'); return; }
-      if (!amount || Number(amount) < 0) { toast('Enter a valid amount', 'error'); return; }
+      if (amount === '' || Number(amount) < 0) { toast('Enter a valid amount', 'error'); return; }
 
       const res = await fetch(`${BASE_URL}/transactions`, {
         method: 'POST', headers: h,
-        body: JSON.stringify({ patient, doctor, amount: Number(amount), transactionDate: date })
+        body: JSON.stringify({ patient, doctor, amount: Number(amount), transactionDate: date, notes })
       });
       const data = await res.json();
-
       if (res.ok) {
         toast('Transaction recorded');
         document.getElementById('txAmount').value = '';
-        document.getElementById('txDate').value   = '';
+        document.getElementById('txNotes').value  = '';
         await loadTransactions();
       } else {
-        // Show the exact server message so the cause is clear
         toast(data.message || 'Transaction failed', 'error');
       }
     }
 
+    // Build query string from active filters and fetch
     async function loadTransactions() {
       const h = authHeaders(); if (!h) return;
-      const res  = await fetch(`${BASE_URL}/transactions`, { headers: h });
+      const status  = document.getElementById('filterStatus').value;
+      const doctor  = document.getElementById('filterDoctor').value;
+      const patient = document.getElementById('filterPatient').value;
+
+      const params = new URLSearchParams();
+      if (status)  params.set('status',  status);
+      if (doctor)  params.set('doctor',  doctor);
+      if (patient) params.set('patient', patient);
+
+      const res  = await fetch(`${BASE_URL}/transactions?${params.toString()}`, { headers: h });
       const data = await res.json();
-      // API returns: { total: N, transactions: [...] }
       const txs  = data.transactions || [];
+      renderTxTable(txs);
+    }
+
+    function renderTxTable(txs) {
       const wrap = document.getElementById('txHistoryWrap');
-      if (!txs.length) { wrap.innerHTML = '<div class="empty-state">No transactions found</div>'; return; }
+      if (!txs.length) {
+        wrap.innerHTML = '<div class="empty-state">No transactions match the selected filters</div>';
+        return;
+      }
+
+      const statusColor = s =>
+        s === 'completed' ? 'var(--accent)' :
+        s === 'cancelled' ? 'var(--danger)' : 'var(--warn)';
+
       wrap.innerHTML = `
         <table class="queue-table">
           <thead>
@@ -1028,6 +1125,8 @@
               <th>Amount</th>
               <th>Status</th>
               <th>Date</th>
+              <th>Notes</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
@@ -1035,16 +1134,67 @@
               <tr>
                 <td>${t.patient?.name || '—'}</td>
                 <td>${t.doctor?.name ? 'Dr. ' + t.doctor.name : '—'}</td>
-                <td style="font-family:'DM Mono',monospace">₹${Number(t.amount || 0).toLocaleString('en-IN')}</td>
-                <td><span style="font-family:'DM Mono',monospace;font-size:11px;
-                                 text-transform:uppercase;color:var(--muted)">${t.status || '—'}</span></td>
+                <td style="font-family:'DM Mono',monospace">
+                  ₹${Number(t.amount || 0).toLocaleString('en-IN')}</td>
+                <td>
+                  <span style="font-family:'DM Mono',monospace;font-size:10px;
+                               text-transform:uppercase;color:${statusColor(t.status)}">
+                    ${t.status || '—'}
+                  </span>
+                </td>
                 <td style="color:var(--muted);font-size:12px">
                   ${t.transactionDate ? new Date(t.transactionDate).toLocaleDateString('en-IN') : '—'}
+                </td>
+                <td style="color:var(--muted);font-size:12px">${t.notes || '—'}</td>
+                <td>
+                  <button class="btn btn-ghost"
+                    style="padding:6px 12px;font-size:11px"
+                    onclick="selectTxForUpdate('${t._id}',
+                      '${(t.patient?.name || '').replace(/'/g,"\\'")}',
+                      '${t.status}')">
+                    Edit
+                  </button>
                 </td>
               </tr>
             `).join('')}
           </tbody>
         </table>`;
+    }
+
+    // Pre-fill the status update card when Edit is clicked on a row
+    function selectTxForUpdate(id, patientName, currentStatus) {
+      document.getElementById('txUpdateId').value      = id;
+      document.getElementById('txUpdateDisplay').value = `${patientName} — ${currentStatus}`;
+      document.getElementById('txUpdateStatus').value  = currentStatus;
+      document.getElementById('txUpdateCard').style.display = 'block';
+      document.getElementById('txUpdateCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function clearTxUpdate() {
+      document.getElementById('txUpdateId').value      = '';
+      document.getElementById('txUpdateDisplay').value = '';
+      document.getElementById('txUpdateCard').style.display = 'none';
+    }
+
+    // PATCH /transactions/:id/status
+    async function updateTransactionStatus() {
+      const h = authHeaders(); if (!h) return;
+      const id     = document.getElementById('txUpdateId').value;
+      const status = document.getElementById('txUpdateStatus').value;
+      if (!id) { toast('No transaction selected', 'error'); return; }
+
+      const res  = await fetch(`${BASE_URL}/transactions/${id}/status`, {
+        method: 'PATCH', headers: h,
+        body: JSON.stringify({ status })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast(`Status updated to "${status}"`);
+        clearTxUpdate();
+        await loadTransactions();
+      } else {
+        toast(data.message || 'Update failed', 'error');
+      }
     }
 
     // ── USERS ──

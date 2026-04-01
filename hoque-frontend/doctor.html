@@ -204,6 +204,21 @@
       <div class="wordmark">HOQUE</div>
       <span class="role-badge">Doctor</span>
     </div>
+    <div class="sidebar-nav">
+      <button class="nav-item active" id="navQueue" onclick="switchTab('queue', this)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
+        My Queue
+      </button>
+      <button class="nav-item" id="navTx" onclick="switchTab('tx', this)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="1" x2="12" y2="23"/>
+          <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+        </svg>
+        Transactions
+      </button>
+    </div>
     <div class="sidebar-footer">
       <button class="logout-btn" onclick="logout()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -217,42 +232,71 @@
   <!-- MAIN -->
   <div class="main">
     <div class="topbar">
-      <h1 class="page-title">My <em>Queue</em></h1>
+      <h1 class="page-title" id="pageTitle">My <em>Queue</em></h1>
     </div>
     <div class="page-content">
 
-      <!-- Doctor selector -->
-      <div class="doctor-select-row">
-        <div>
-          <label>Select Doctor Profile</label>
-          <select id="doctorSelect"></select>
-        </div>
-        <button class="btn btn-primary" onclick="loadQueue()">Load Queue</button>
-      </div>
+      <!-- ── QUEUE PANEL ── -->
+      <div id="panel-queue">
 
-      <!-- Active patient action -->
-      <div id="actionWrap" style="display:none; margin-bottom: 20px;">
-        <div class="action-card">
-          <div class="action-info">
-            <div class="patient-name" id="selectedPatientName">—</div>
-            <div class="patient-meta" id="selectedPatientMeta">Select a patient from the queue below</div>
+        <!-- Doctor selector -->
+        <div class="doctor-select-row">
+          <div>
+            <label>Select Doctor Profile</label>
+            <select id="doctorSelect" onchange="onDoctorChange()"></select>
           </div>
-          <button class="btn btn-primary" id="completeBtn" onclick="completePatient()" disabled>
-            Mark Complete
-          </button>
+          <button class="btn btn-primary" onclick="loadQueue()">Load Queue</button>
         </div>
-      </div>
 
-      <!-- Queue table -->
-      <div class="card">
-        <div class="card-title" id="queueCardTitle">Queue</div>
-        <div id="queueWrap">
-          <div class="empty-state">
-            <div class="empty-icon">⚕</div>
-            Select your profile and click "Load Queue"
+        <!-- Active patient action -->
+        <div id="actionWrap" style="display:none; margin-bottom: 20px;">
+          <div class="action-card">
+            <div class="action-info">
+              <div class="patient-name" id="selectedPatientName">—</div>
+              <div class="patient-meta" id="selectedPatientMeta">Select a patient from the queue below</div>
+            </div>
+            <button class="btn btn-primary" id="completeBtn" onclick="completePatient()" disabled>
+              Mark Complete
+            </button>
           </div>
         </div>
-      </div>
+
+        <!-- Queue table -->
+        <div class="card">
+          <div class="card-title" id="queueCardTitle">Queue</div>
+          <div id="queueWrap">
+            <div class="empty-state">
+              <div class="empty-icon">⚕</div>
+              Select your profile and click "Load Queue"
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /panel-queue -->
+
+      <!-- ── TRANSACTIONS PANEL ── -->
+      <div id="panel-tx" style="display:none">
+
+        <div class="doctor-select-row" style="margin-bottom:20px">
+          <div>
+            <label>Viewing transactions for</label>
+            <input id="txDoctorLabel" readonly style="cursor:default;opacity:0.7;margin:0"
+              placeholder="Select a doctor profile in the Queue tab first">
+          </div>
+          <button class="btn btn-ghost" onclick="loadDoctorTransactions()">Refresh</button>
+        </div>
+
+        <div class="card">
+          <div class="card-title">My Patients' Recent Transactions</div>
+          <div id="doctorTxWrap">
+            <div class="empty-state">
+              <div class="empty-icon">₹</div>
+              Select a doctor profile in the Queue tab, then come here to view transactions
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /panel-tx -->
 
     </div>
   </div>
@@ -265,6 +309,31 @@
     if (!token) { window.location.href = 'index.html'; }
 
     let selectedPatientId = null;
+    let activeDoctorId    = null;
+    let activeDoctorName  = '';
+
+    const pageTitles = {
+      queue: 'My <em>Queue</em>',
+      tx:    'Patient <em>Transactions</em>'
+    };
+
+    function switchTab(tab, btn) {
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('panel-queue').style.display = tab === 'queue' ? 'block' : 'none';
+      document.getElementById('panel-tx').style.display    = tab === 'tx'    ? 'block' : 'none';
+      document.getElementById('pageTitle').innerHTML = pageTitles[tab];
+      if (tab === 'tx') loadDoctorTransactions();
+    }
+
+    // When doctor dropdown changes, store the selected doctor
+    function onDoctorChange() {
+      const sel = document.getElementById('doctorSelect');
+      const opt = sel.options[sel.selectedIndex];
+      activeDoctorId   = sel.value;
+      activeDoctorName = opt?.textContent || '';
+      document.getElementById('txDoctorLabel').value = activeDoctorName;
+    }
 
     function toast(msg, type = 'success') {
       const t = document.getElementById('toast');
@@ -399,6 +468,71 @@
         // Show the actual server error so it's debuggable
         toast(data.message || 'Could not complete patient', 'error');
       }
+    }
+
+    // ── DOCTOR TRANSACTIONS (Sprint 2) ──
+    async function loadDoctorTransactions() {
+      const wrap = document.getElementById('doctorTxWrap');
+      if (!activeDoctorId) {
+        wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">₹</div>Select a doctor profile in the Queue tab first</div>';
+        return;
+      }
+
+      document.getElementById('txDoctorLabel').value = activeDoctorName;
+
+      let data;
+      try {
+        const res = await fetch(`${BASE_URL}/transactions?doctor=${activeDoctorId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        data = await res.json();
+        if (!res.ok) { wrap.innerHTML = `<div class="empty-state">${data.message || 'Failed to load'}</div>`; return; }
+      } catch {
+        wrap.innerHTML = '<div class="empty-state">Network error</div>';
+        return;
+      }
+
+      const txs = data.transactions || [];
+      if (!txs.length) {
+        wrap.innerHTML = '<div class="empty-state">No transactions found for this doctor</div>';
+        return;
+      }
+
+      const statusColor = s =>
+        s === 'completed' ? 'var(--accent)' :
+        s === 'cancelled' ? 'var(--danger)' : 'var(--warn)';
+
+      wrap.innerHTML = `
+        <table class="queue-table">
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${txs.map(t => `
+              <tr>
+                <td><strong>${t.patient?.name || '—'}</strong></td>
+                <td style="font-family:'DM Mono',monospace">
+                  ₹${Number(t.amount || 0).toLocaleString('en-IN')}</td>
+                <td>
+                  <span style="font-family:'DM Mono',monospace;font-size:10px;
+                               text-transform:uppercase;color:${statusColor(t.status)}">
+                    ${t.status || '—'}
+                  </span>
+                </td>
+                <td style="color:var(--muted);font-size:12px">
+                  ${t.transactionDate ? new Date(t.transactionDate).toLocaleDateString('en-IN') : '—'}
+                </td>
+                <td style="color:var(--muted);font-size:12px">${t.notes || '—'}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>`;
     }
 
     loadDoctors();
