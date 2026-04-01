@@ -13,17 +13,17 @@ router.post("/", auth, roleCheck("receptionist"), patientController.createPatien
    RECEPTIONIST - LIST/READ PATIENTS
 ================================ */
 // GET /patients?doctorAssigned=<id>&status=waiting,in-consultation&name=Alice
-router.get("/", auth, roleCheck("receptionist"), patientController.getPatients);
+router.get("/", auth, roleCheck("receptionist","admin"), patientController.getPatients);
 
 /* ================================
    PATIENT - CHECK POSITION BY NAME
 ================================ */
-router.get("/name/:name/position", auth, roleCheck("patient"), patientController.getPatientPositionByName);
+router.get("/name/:name/position", auth, roleCheck("patient","admin"), patientController.getPatientPositionByName);
 
 /* ================================
    DOCTOR - VIEW QUEUE
 ================================ */
-router.get("/doctor/:doctorId/queue", auth, roleCheck("doctor"), patientController.getDoctorQueue);
+router.get("/doctor/:doctorId/queue", auth, roleCheck("doctor","admin"), patientController.getDoctorQueue);
 router.get("/doctor/queue", auth, roleCheck("doctor"), patientController.getDoctorQueue);
 
 // GET /patients/:id

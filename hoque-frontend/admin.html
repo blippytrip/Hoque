@@ -1,0 +1,2135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HOQUE — Admin Analytics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    :root {
+      --sidebar-w: 240px;
+      --bg:        #0c0f14;
+      --surface:   #13181f;
+      --elevated:  #1a2130;
+      --border:    #232c3a;
+      --text:      #d8e0ea;
+      --muted:     #5a6a80;
+      --accent:    #4af3c4;
+      --accent-dim:#1a5c4a;
+      --danger:    #f36a4a;
+      --warn:      #f3c24a;
+      --info:      #4a9ff3;
+      --info-dim:  #1a3a5c;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      overflow-y: auto;
+    }
+
+    .sidebar-logo {
+      padding: 28px 24px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-logo .wordmark {
+      font-family: 'Fraunces', serif;
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 1px;
+    }
+
+    .sidebar-logo .role-badge {
+      display: inline-block;
+      margin-top: 6px;
+      font-size: 10px;
+      font-family: 'DM Mono', monospace;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    .sidebar-section-label {
+      padding: 16px 16px 6px;
+      font-size: 9px;
+      font-family: 'DM Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--muted);
+      opacity: 0.6;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--muted);
+      transition: background 0.15s, color 0.15s;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .nav-item:hover { background: var(--elevated); color: var(--text); }
+    .nav-item.active { background: var(--accent-dim); color: var(--accent); }
+
+    .sidebar-footer {
+      padding: 16px 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .logout-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--muted);
+      background: none;
+      border: none;
+      width: 100%;
+      transition: background 0.15s, color 0.15s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .logout-btn:hover { background: rgba(243,106,74,0.1); color: var(--danger); }
+
+    /* ── MAIN ── */
+    .main {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      padding: 26px 36px 0;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .page-title {
+      font-family: 'Fraunces', serif;
+      font-size: 28px;
+      font-weight: 300;
+      color: var(--text);
+    }
+    .page-title em { font-style: italic; color: var(--accent); }
+
+    .topbar-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .refresh-btn, .print-btn {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 14px;
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .refresh-btn:hover, .print-btn:hover { color: var(--text); border-color: var(--text); }
+
+    .live-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .page-content {
+      padding: 24px 36px 48px;
+      flex: 1;
+    }
+
+    /* ── PANELS ── */
+    .panel { display: none; animation: fadeIn 0.2s ease; }
+    .panel.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── FILTER BAR ── */
+    .filter-bar {
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding: 18px 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      flex-wrap: wrap;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .filter-group label {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+    }
+
+    .filter-group input[type="date"],
+    .filter-group select {
+      padding: 8px 12px;
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      outline: none;
+      appearance: none;
+      transition: border-color 0.15s;
+      margin: 0;
+      width: auto;
+    }
+
+    .filter-group input[type="date"]:focus,
+    .filter-group select:focus {
+      border-color: var(--accent);
+    }
+
+    .filter-group select option { background: var(--elevated); }
+
+    .filter-apply {
+      padding: 9px 20px;
+      background: var(--accent);
+      color: #0c0f14;
+      border: none;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      align-self: flex-end;
+    }
+    .filter-apply:hover { background: #6ffad6; transform: translateY(-1px); }
+
+    .filter-reset {
+      padding: 9px 16px;
+      background: var(--elevated);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      align-self: flex-end;
+    }
+    .filter-reset:hover { color: var(--text); border-color: var(--muted); }
+
+    /* ── KPI GRID ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 22px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.15s;
+    }
+    .kpi-card:hover { border-color: var(--accent); }
+    .kpi-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--accent);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .kpi-card:hover::after { opacity: 1; }
+    .kpi-card.warn::after { background: var(--warn); }
+    .kpi-card.danger::after { background: var(--danger); }
+    .kpi-card.info::after { background: var(--info); }
+
+    .kpi-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .kpi-value {
+      font-family: 'Fraunces', serif;
+      font-size: 38px;
+      font-weight: 300;
+      line-height: 1;
+      color: var(--text);
+    }
+    .kpi-card.accent .kpi-value { color: var(--accent); }
+    .kpi-card.warn   .kpi-value { color: var(--warn); }
+    .kpi-card.danger .kpi-value { color: var(--danger); }
+    .kpi-card.info   .kpi-value { color: var(--info); }
+
+    .kpi-sub {
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 22px;
+      margin-bottom: 16px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 10px;
+      font-family: 'DM Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+    }
+
+    .card-meta {
+      font-size: 10px;
+      font-family: 'DM Mono', monospace;
+      color: var(--muted);
+    }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+    /* ── BAR CHART ── */
+    .bar-chart { display: flex; flex-direction: column; gap: 12px; }
+
+    .bar-row { display: flex; align-items: center; gap: 12px; }
+
+    .bar-label {
+      width: 120px;
+      flex-shrink: 0;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    .bar-track {
+      flex: 1;
+      height: 6px;
+      background: var(--elevated);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .bar-fill.warn   { background: var(--warn); }
+    .bar-fill.danger { background: var(--danger); }
+    .bar-fill.info   { background: var(--info); }
+
+    .bar-val {
+      width: 60px;
+      text-align: right;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--text);
+      flex-shrink: 0;
+    }
+
+    /* ── DONUT CHART ── */
+    .donut-wrap {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+
+    .donut-svg-wrap {
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .donut-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .legend-label { color: var(--muted); font-size: 12px; }
+    .legend-val { color: var(--text); font-weight: 600; margin-left: auto; font-family: 'DM Mono', monospace; font-size: 12px; }
+
+    /* ── SPARKLINE ── */
+    .sparkline-wrap {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .spark-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 18px;
+    }
+
+    .spark-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .spark-val {
+      font-family: 'Fraunces', serif;
+      font-size: 26px;
+      font-weight: 300;
+      color: var(--text);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .spark-canvas { width: 100%; height: 32px; }
+
+    /* ── TABLE ── */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .data-table th {
+      text-align: left;
+      padding: 10px 14px;
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .data-table th:hover { color: var(--text); }
+    .data-table th.sorted { color: var(--accent); }
+
+    .data-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(35,44,58,0.5);
+      vertical-align: middle;
+    }
+
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tbody tr { transition: background 0.1s; }
+    .data-table tbody tr:hover { background: var(--elevated); }
+
+    /* ── BADGES ── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 600;
+      font-family: 'DM Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-emergency { background: rgba(243,106,74,0.15); color: var(--danger); }
+    .badge-urgent    { background: rgba(243,194,74,0.15); color: var(--warn); }
+    .badge-normal    { background: rgba(74,243,196,0.1);  color: var(--accent); }
+    .badge-waiting   { background: rgba(90,106,128,0.2);  color: var(--muted); }
+    .badge-active    { background: rgba(243,194,74,0.1);  color: var(--warn); }
+    .badge-done      { background: rgba(74,243,196,0.12); color: var(--accent); }
+    .badge-pending   { background: rgba(74,159,243,0.1);  color: var(--info); }
+    .badge-cancelled { background: rgba(243,106,74,0.1);  color: var(--danger); }
+
+    /* ── PROGRESS RING ── */
+    .progress-ring-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .progress-ring-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    /* ── DOCTOR PERFORMANCE ── */
+    .doctor-perf-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(35,44,58,0.5);
+    }
+    .doctor-perf-row:last-child { border-bottom: none; }
+
+    .doc-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Fraunces', serif;
+      font-size: 14px;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .doc-info { flex: 1; min-width: 0; }
+
+    .doc-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .doc-spec {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      margin-top: 2px;
+    }
+
+    .doc-stats {
+      display: flex;
+      gap: 20px;
+      flex-shrink: 0;
+    }
+
+    .doc-stat { text-align: right; }
+
+    .doc-stat-val {
+      font-family: 'Fraunces', serif;
+      font-size: 18px;
+      font-weight: 300;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .doc-stat-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .doc-bar-wrap {
+      width: 80px;
+      flex-shrink: 0;
+    }
+
+    .doc-bar-track {
+      height: 4px;
+      background: var(--elevated);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .doc-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ── TIMELINE / HOURLY ── */
+    .hourly-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      height: 80px;
+      padding-top: 10px;
+    }
+
+    .hour-bar-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      height: 100%;
+    }
+
+    .hour-bar-col {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      align-items: flex-end;
+      cursor: pointer;
+    }
+
+    .hour-bar {
+      width: 100%;
+      background: var(--elevated);
+      border-radius: 3px 3px 0 0;
+      transition: background 0.15s, height 0.8s cubic-bezier(0.4,0,0.2,1);
+      min-height: 3px;
+    }
+
+    .hour-bar:hover { background: var(--accent); }
+
+    .hour-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 8px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      z-index: 1000;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.25s ease;
+      pointer-events: none;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.success { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(74,243,196,0.3); }
+    #toast.error   { background: rgba(243,106,74,0.15); color: var(--danger); border: 1px solid rgba(243,106,74,0.3); }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+    /* ── DIVIDER ── */
+    .section-gap { margin-bottom: 16px; }
+
+    /* ── LOADING OVERLAY ── */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(12,15,20,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .loading-overlay.show { opacity: 1; pointer-events: all; }
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── RANGE PILL ── */
+    .range-pills {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .range-pill {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border: 1px solid var(--border);
+      background: none;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .range-pill:hover { color: var(--text); border-color: var(--muted); }
+    .range-pill.active { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+
+    @media print {
+      .sidebar, .topbar-actions { display: none !important; }
+      body { display: block; }
+      .main { overflow: visible; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="wordmark">HOQUE</div>
+      <span class="role-badge">Admin Dashboard</span>
+    </div>
+
+    <div class="sidebar-nav">
+      <div class="sidebar-section-label">Analytics</div>
+      <button class="nav-item active" onclick="switchPanel('overview', this)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg>
+        Overview
+      </button>
+      <button class="nav-item" onclick="switchPanel('queue', this)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+          <line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/>
+          <line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+        </svg>
+        Queue Analytics
+      </button>
+      <button class="nav-item" onclick="switchPanel('doctors', this)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M12 6v6"/>
+        </svg>
+        Doctor Performance
+      </button>
+      <button class="nav-item" onclick="switchPanel('finance', this)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="1" x2="12" y2="23"/>
+          <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+        </svg>
+        Finance
+      </button>
+      <div class="sidebar-section-label" style="margin-top:8px">Reports</div>
+      <button class="nav-item" onclick="switchPanel('patients', this)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+        </svg>
+        Patient Report
+      </button>
+      <button class="nav-item" onclick="switchPanel('transactions', this)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+          <rect x="9" y="3" width="6" height="4" rx="1"/>
+          <line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/>
+        </svg>
+        Transactions
+      </button>
+    </div>
+
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="logout()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+        </svg>
+        Sign out
+      </button>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+    <div class="topbar">
+      <h1 class="page-title" id="pageTitle">Hospital <em>Overview</em></h1>
+      <div class="topbar-actions">
+        <div class="range-pills" id="quickRangePills">
+          <button class="range-pill active" onclick="setQuickRange(7, this)">7D</button>
+          <button class="range-pill" onclick="setQuickRange(30, this)">30D</button>
+          <button class="range-pill" onclick="setQuickRange(90, this)">90D</button>
+        </div>
+        <button class="refresh-btn" onclick="refreshAll()">
+          <span class="live-dot"></span> Live
+        </button>
+        <button class="print-btn" onclick="window.print()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 6 2 18 2 18 9"/>
+            <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+            <rect x="6" y="14" width="12" height="8"/>
+          </svg>
+          Print
+        </button>
+      </div>
+    </div>
+
+    <div class="page-content">
+
+      <!-- ─────────────────────────────────────────
+           OVERVIEW PANEL
+      ───────────────────────────────────────── -->
+      <div class="panel active" id="panel-overview">
+
+        <!-- Shared date filter -->
+        <div class="filter-bar">
+          <div class="filter-group">
+            <label>From</label>
+            <input type="date" id="ov-start">
+          </div>
+          <div class="filter-group">
+            <label>To</label>
+            <input type="date" id="ov-end">
+          </div>
+          <button class="filter-apply" onclick="loadOverview()">Generate</button>
+          <button class="filter-reset" onclick="resetDates('ov-start','ov-end',30); loadOverview()">Reset</button>
+        </div>
+
+        <!-- KPI Row -->
+        <div class="kpi-grid" id="ov-kpi">
+          <div class="kpi-card accent">
+            <div class="kpi-label">Total Patients</div>
+            <div class="kpi-value" id="kpi-total">—</div>
+            <div class="kpi-sub" id="kpi-total-sub">in selected period</div>
+          </div>
+          <div class="kpi-card warn">
+            <div class="kpi-label">Waiting Now</div>
+            <div class="kpi-value" id="kpi-waiting">—</div>
+            <div class="kpi-sub">currently in queue</div>
+          </div>
+          <div class="kpi-card info">
+            <div class="kpi-label">In Consultation</div>
+            <div class="kpi-value" id="kpi-active">—</div>
+            <div class="kpi-sub">being seen now</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Completed</div>
+            <div class="kpi-value" id="kpi-done">—</div>
+            <div class="kpi-sub" id="kpi-done-rate">completion rate</div>
+          </div>
+        </div>
+
+        <!-- Revenue KPIs -->
+        <div class="kpi-grid" id="ov-rev-kpi">
+          <div class="kpi-card">
+            <div class="kpi-label">Total Revenue</div>
+            <div class="kpi-value" id="kpi-rev" style="font-size:28px">—</div>
+            <div class="kpi-sub">all transactions</div>
+          </div>
+          <div class="kpi-card accent">
+            <div class="kpi-label">Collected</div>
+            <div class="kpi-value" id="kpi-collected" style="font-size:28px">—</div>
+            <div class="kpi-sub">completed payments</div>
+          </div>
+          <div class="kpi-card warn">
+            <div class="kpi-label">Pending</div>
+            <div class="kpi-value" id="kpi-pending" style="font-size:28px">—</div>
+            <div class="kpi-sub">awaiting payment</div>
+          </div>
+          <div class="kpi-card danger">
+            <div class="kpi-label">Cancelled</div>
+            <div class="kpi-value" id="kpi-cancelled" style="font-size:28px">—</div>
+            <div class="kpi-sub">voided transactions</div>
+          </div>
+        </div>
+
+        <!-- Charts row -->
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Patient Flow by Status</div>
+            </div>
+            <div class="bar-chart" id="ov-patient-chart">
+              <div class="empty-state">Click Generate to load</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Revenue by Transaction Status</div>
+            </div>
+            <div class="bar-chart" id="ov-revenue-chart">
+              <div class="empty-state">Click Generate to load</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Priority breakdown -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Priority Distribution</div>
+            <div class="card-meta" id="ov-priority-meta">All patients in period</div>
+          </div>
+          <div id="ov-priority-chart">
+            <div class="empty-state">Click Generate to load</div>
+          </div>
+        </div>
+
+      </div><!-- /panel-overview -->
+
+
+      <!-- ─────────────────────────────────────────
+           QUEUE ANALYTICS PANEL
+      ───────────────────────────────────────── -->
+      <div class="panel" id="panel-queue">
+
+        <div class="filter-bar">
+          <div class="filter-group">
+            <label>Doctor</label>
+            <select id="q-doctor">
+              <option value="">All Doctors</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Status</label>
+            <select id="q-status">
+              <option value="">All Statuses</option>
+              <option value="waiting">Waiting</option>
+              <option value="in-consultation">In Consultation</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Priority</label>
+            <select id="q-priority">
+              <option value="">All Priorities</option>
+              <option value="3">Emergency</option>
+              <option value="2">Urgent</option>
+              <option value="1">Normal</option>
+            </select>
+          </div>
+          <button class="filter-apply" onclick="loadQueueAnalytics()">Apply</button>
+          <button class="filter-reset" onclick="resetQueueFilters(); loadQueueAnalytics()">Reset</button>
+        </div>
+
+        <!-- Live queue KPIs -->
+        <div class="kpi-grid">
+          <div class="kpi-card danger">
+            <div class="kpi-label">Emergency</div>
+            <div class="kpi-value" id="q-kpi-emergency">—</div>
+            <div class="kpi-sub">highest priority</div>
+          </div>
+          <div class="kpi-card warn">
+            <div class="kpi-label">Urgent</div>
+            <div class="kpi-value" id="q-kpi-urgent">—</div>
+            <div class="kpi-sub">medium priority</div>
+          </div>
+          <div class="kpi-card accent">
+            <div class="kpi-label">Normal</div>
+            <div class="kpi-value" id="q-kpi-normal">—</div>
+            <div class="kpi-sub">standard queue</div>
+          </div>
+          <div class="kpi-card info">
+            <div class="kpi-label">Total Active</div>
+            <div class="kpi-value" id="q-kpi-total">—</div>
+            <div class="kpi-sub">waiting + in consult</div>
+          </div>
+        </div>
+
+        <!-- Queue by doctor breakdown -->
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Queue Load by Doctor</div>
+            </div>
+            <div id="q-by-doctor-chart">
+              <div class="empty-state">Click Apply to load</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Status Breakdown</div>
+            </div>
+            <div id="q-status-chart">
+              <div class="empty-state">Click Apply to load</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Full patient queue table -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Patient Queue Detail</div>
+            <div class="card-meta" id="q-table-meta">—</div>
+          </div>
+          <div id="q-table-wrap">
+            <div class="empty-state">Click Apply to load</div>
+          </div>
+        </div>
+
+      </div><!-- /panel-queue -->
+
+
+      <!-- ─────────────────────────────────────────
+           DOCTOR PERFORMANCE PANEL
+      ───────────────────────────────────────── -->
+      <div class="panel" id="panel-doctors">
+
+        <div class="filter-bar">
+          <div class="filter-group">
+            <label>Specialization</label>
+            <select id="dp-spec">
+              <option value="">All Specializations</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Availability</label>
+            <select id="dp-avail">
+              <option value="">All</option>
+              <option value="true">Available</option>
+              <option value="false">Unavailable</option>
+            </select>
+          </div>
+          <button class="filter-apply" onclick="loadDoctorPerformance()">Apply</button>
+          <button class="filter-reset" onclick="document.getElementById('dp-spec').value=''; document.getElementById('dp-avail').value=''; loadDoctorPerformance()">Reset</button>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-card accent">
+            <div class="kpi-label">Total Doctors</div>
+            <div class="kpi-value" id="dp-kpi-total">—</div>
+            <div class="kpi-sub">on roster</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Available</div>
+            <div class="kpi-value" id="dp-kpi-avail">—</div>
+            <div class="kpi-sub">currently accepting</div>
+          </div>
+          <div class="kpi-card warn">
+            <div class="kpi-label">Unavailable</div>
+            <div class="kpi-value" id="dp-kpi-unavail">—</div>
+            <div class="kpi-sub">not taking patients</div>
+          </div>
+          <div class="kpi-card info">
+            <div class="kpi-label">Specializations</div>
+            <div class="kpi-value" id="dp-kpi-specs">—</div>
+            <div class="kpi-sub">unique departments</div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="card" style="grid-column: 1 / -1">
+            <div class="card-header">
+              <div class="card-title">Doctor Workload & Queue Depth</div>
+              <div class="card-meta">patients currently assigned</div>
+            </div>
+            <div id="dp-doctor-list">
+              <div class="empty-state">Click Apply to load</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">By Specialization</div>
+            </div>
+            <div class="bar-chart" id="dp-spec-chart">
+              <div class="empty-state">Click Apply to load</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Availability Split</div>
+            </div>
+            <div id="dp-avail-chart" style="padding: 8px 0">
+              <div class="empty-state">Click Apply to load</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /panel-doctors -->
+
+
+      <!-- ─────────────────────────────────────────
+           FINANCE PANEL
+      ───────────────────────────────────────── -->
+      <div class="panel" id="panel-finance">
+
+        <div class="filter-bar">
+          <div class="filter-group">
+            <label>From</label>
+            <input type="date" id="fin-start">
+          </div>
+          <div class="filter-group">
+            <label>To</label>
+            <input type="date" id="fin-end">
+          </div>
+          <div class="filter-group">
+            <label>Status</label>
+            <select id="fin-status">
+              <option value="">All</option>
+              <option value="pending">Pending</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Doctor</label>
+            <select id="fin-doctor">
+              <option value="">All Doctors</option>
+            </select>
+          </div>
+          <button class="filter-apply" onclick="loadFinance()">Apply</button>
+          <button class="filter-reset" onclick="resetDates('fin-start','fin-end',30); document.getElementById('fin-status').value=''; document.getElementById('fin-doctor').value=''; loadFinance()">Reset</button>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-card accent">
+            <div class="kpi-label">Gross Revenue</div>
+            <div class="kpi-value" id="fin-kpi-gross" style="font-size:26px">—</div>
+            <div class="kpi-sub">all transactions</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Net Collected</div>
+            <div class="kpi-value" id="fin-kpi-net" style="font-size:26px">—</div>
+            <div class="kpi-sub">completed only</div>
+          </div>
+          <div class="kpi-card warn">
+            <div class="kpi-label">Outstanding</div>
+            <div class="kpi-value" id="fin-kpi-pending" style="font-size:26px">—</div>
+            <div class="kpi-sub">pending payments</div>
+          </div>
+          <div class="kpi-card info">
+            <div class="kpi-label">Transactions</div>
+            <div class="kpi-value" id="fin-kpi-count">—</div>
+            <div class="kpi-sub">total records</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Revenue by Doctor</div>
+          </div>
+          <div class="bar-chart" id="fin-by-doctor">
+            <div class="empty-state">Click Apply to load</div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Transaction Status Mix</div>
+            </div>
+            <div class="bar-chart" id="fin-status-chart">
+              <div class="empty-state">Click Apply to load</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Top Patients by Billing</div>
+            </div>
+            <div class="bar-chart" id="fin-top-patients">
+              <div class="empty-state">Click Apply to load</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /panel-finance -->
+
+
+      <!-- ─────────────────────────────────────────
+           PATIENT REPORT PANEL
+      ───────────────────────────────────────── -->
+      <div class="panel" id="panel-patients">
+
+        <div class="filter-bar">
+          <div class="filter-group">
+            <label>Status</label>
+            <select id="pr-status">
+              <option value="">All</option>
+              <option value="waiting">Waiting</option>
+              <option value="in-consultation">In Consultation</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Doctor</label>
+            <select id="pr-doctor">
+              <option value="">All Doctors</option>
+            </select>
+          </div>
+          <button class="filter-apply" onclick="loadPatientReport()">Apply</button>
+          <button class="filter-reset" onclick="document.getElementById('pr-status').value=''; document.getElementById('pr-doctor').value=''; loadPatientReport()">Reset</button>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-card accent">
+            <div class="kpi-label">Total Patients</div>
+            <div class="kpi-value" id="pr-kpi-total">—</div>
+          </div>
+          <div class="kpi-card warn">
+            <div class="kpi-label">Waiting</div>
+            <div class="kpi-value" id="pr-kpi-waiting">—</div>
+          </div>
+          <div class="kpi-card info">
+            <div class="kpi-label">In Consultation</div>
+            <div class="kpi-value" id="pr-kpi-active">—</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Completed</div>
+            <div class="kpi-value" id="pr-kpi-done">—</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">All Patients</div>
+            <div class="card-meta" id="pr-table-meta">—</div>
+          </div>
+          <div id="pr-table-wrap">
+            <div class="empty-state">Click Apply to load</div>
+          </div>
+        </div>
+
+      </div><!-- /panel-patients -->
+
+
+      <!-- ─────────────────────────────────────────
+           TRANSACTIONS PANEL
+      ───────────────────────────────────────── -->
+      <div class="panel" id="panel-transactions">
+
+        <div class="filter-bar">
+          <div class="filter-group">
+            <label>Status</label>
+            <select id="tr-status">
+              <option value="">All</option>
+              <option value="pending">Pending</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Doctor</label>
+            <select id="tr-doctor">
+              <option value="">All Doctors</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Patient</label>
+            <select id="tr-patient">
+              <option value="">All Patients</option>
+            </select>
+          </div>
+          <button class="filter-apply" onclick="loadTransactionReport()">Apply</button>
+          <button class="filter-reset" onclick="resetTxFilters(); loadTransactionReport()">Reset</button>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-card accent">
+            <div class="kpi-label">Total Transactions</div>
+            <div class="kpi-value" id="tr-kpi-total">—</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Completed</div>
+            <div class="kpi-value" id="tr-kpi-completed">—</div>
+          </div>
+          <div class="kpi-card warn">
+            <div class="kpi-label">Pending</div>
+            <div class="kpi-value" id="tr-kpi-pending">—</div>
+          </div>
+          <div class="kpi-card danger">
+            <div class="kpi-label">Cancelled</div>
+            <div class="kpi-value" id="tr-kpi-cancelled">—</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Transaction Records</div>
+            <div class="card-meta" id="tr-table-meta">—</div>
+          </div>
+          <div id="tr-table-wrap">
+            <div class="empty-state">Click Apply to load</div>
+          </div>
+        </div>
+
+      </div><!-- /panel-transactions -->
+
+    </div><!-- /page-content -->
+  </div><!-- /main -->
+
+  <div id="toast"></div>
+  <div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div></div>
+
+  <script>
+    const BASE_URL = "http://localhost:5000";
+
+    /* ── TOKEN ── */
+    function getToken() { return localStorage.getItem("token"); }
+    function logout() { localStorage.removeItem("token"); window.location.href = "index.html"; }
+
+    const token = getToken();
+    if (!token) { window.location.href = "index.html"; }
+    else {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    if (payload.role !== 'admin') { window.location.href = "index.html"; }
+    }
+
+    function authH() {
+      return { "Content-Type": "application/json", "Authorization": `Bearer ${token}` };
+    }
+
+    /* ── TOAST ── */
+    function toast(msg, type = "success") {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.className = `show ${type}`;
+      setTimeout(() => t.className = "", 2800);
+    }
+
+    /* ── LOADING ── */
+    function setLoading(on) {
+      document.getElementById("loadingOverlay").classList.toggle("show", on);
+    }
+
+    /* ── NAVIGATION ── */
+    const pageTitles = {
+      overview:     "Hospital <em>Overview</em>",
+      queue:        "Queue <em>Analytics</em>",
+      doctors:      "Doctor <em>Performance</em>",
+      finance:      "Finance <em>Report</em>",
+      patients:     "Patient <em>Report</em>",
+      transactions: "Transaction <em>Log</em>"
+    };
+
+    function switchPanel(id, btn) {
+      document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+      document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+      document.getElementById("panel-" + id).classList.add("active");
+      btn.classList.add("active");
+      document.getElementById("pageTitle").innerHTML = pageTitles[id];
+    }
+
+    /* ── DATE HELPERS ── */
+    function todayStr() { return new Date().toISOString().split("T")[0]; }
+
+    function daysAgoStr(n) {
+      const d = new Date();
+      d.setDate(d.getDate() - n);
+      return d.toISOString().split("T")[0];
+    }
+
+    function resetDates(startId, endId, days = 30) {
+      document.getElementById(endId).value   = todayStr();
+      document.getElementById(startId).value = daysAgoStr(days);
+    }
+
+    function setQuickRange(days, btn) {
+      document.querySelectorAll(".range-pill").forEach(p => p.classList.remove("active"));
+      btn.classList.add("active");
+      resetDates("ov-start", "ov-end", days);
+      resetDates("fin-start", "fin-end", days);
+      loadOverview();
+    }
+
+    /* ── FORMAT ── */
+    function fmtINR(val) {
+      const n = Number(val) || 0;
+      if (n >= 1e7) return "₹" + (n / 1e7).toFixed(1) + "Cr";
+      if (n >= 1e5) return "₹" + (n / 1e5).toFixed(1) + "L";
+      return "₹" + n.toLocaleString("en-IN");
+    }
+
+    function priorityBadge(p) {
+      if (p === 3) return '<span class="badge badge-emergency">Emergency</span>';
+      if (p === 2) return '<span class="badge badge-urgent">Urgent</span>';
+      return '<span class="badge badge-normal">Normal</span>';
+    }
+
+    function statusBadge(s) {
+      if (s === "in-consultation") return '<span class="badge badge-active">Active</span>';
+      if (s === "completed")       return '<span class="badge badge-done">Done</span>';
+      if (s === "pending")         return '<span class="badge badge-pending">Pending</span>';
+      if (s === "cancelled")       return '<span class="badge badge-cancelled">Cancelled</span>';
+      return '<span class="badge badge-waiting">Waiting</span>';
+    }
+
+    /* ── BAR CHART RENDERER ── */
+    function renderBars(containerId, entries, colorClass = "", valueFmt = null) {
+      const el = document.getElementById(containerId);
+      if (!entries || !entries.length) {
+        el.innerHTML = '<div class="empty-state">No data available</div>';
+        return;
+      }
+      const maxVal = Math.max(...entries.map(([, v]) => v), 1);
+      el.innerHTML = entries.map(([label, val]) => `
+        <div class="bar-row">
+          <div class="bar-label">${label}</div>
+          <div class="bar-track">
+            <div class="bar-fill ${colorClass}" data-pct="${(val / maxVal * 100).toFixed(1)}"></div>
+          </div>
+          <div class="bar-val">${valueFmt ? valueFmt(val) : val}</div>
+        </div>`).join("");
+
+      requestAnimationFrame(() => {
+        el.querySelectorAll(".bar-fill").forEach(b => b.style.width = b.dataset.pct + "%");
+      });
+    }
+
+    /* ── GLOBAL DATA CACHE ── */
+    let allDoctors  = [];
+    let allPatients = [];
+
+    async function fetchDoctors() {
+      const res = await fetch(`${BASE_URL}/doctors`);
+      allDoctors = await res.json();
+      return allDoctors;
+    }
+
+    async function fetchPatients(params = {}) {
+      const qs = new URLSearchParams(params).toString();
+      const res = await fetch(`${BASE_URL}/patients?${qs}`, { headers: authH() });
+      const data = await res.json();
+      return data.patients || [];
+    }
+
+    async function fetchTransactions(params = {}) {
+      const qs = new URLSearchParams(params).toString();
+      const res = await fetch(`${BASE_URL}/transactions?${qs}`, { headers: authH() });
+      const data = await res.json();
+      return data.transactions || [];
+    }
+
+    async function fetchReport(start, end) {
+      const res = await fetch(
+        `${BASE_URL}/reports/summary?startDate=${encodeURIComponent(start)}&endDate=${encodeURIComponent(end)}`,
+        { headers: authH() }
+      );
+      if (!res.ok) return null;
+      return await res.json();
+    }
+
+    /* ── POPULATE FILTER DROPDOWNS ── */
+    function populateDoctorSelects(doctors) {
+      const ids = ["q-doctor", "dp-spec-src", "fin-doctor", "pr-doctor", "tr-doctor"];
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const cur = el.value;
+        // For dp-spec we populate specializations elsewhere
+        el.innerHTML = id === "q-doctor" || id === "fin-doctor" || id === "pr-doctor" || id === "tr-doctor"
+          ? '<option value="">All Doctors</option>'
+          : '<option value="">All</option>';
+        doctors.forEach(d => {
+          const o = document.createElement("option");
+          o.value = d._id;
+          o.textContent = `Dr. ${d.name}`;
+          el.appendChild(o);
+        });
+        if (cur) el.value = cur;
+      });
+
+      // specialization filter in doctor perf
+      const specEl = document.getElementById("dp-spec");
+      const curSpec = specEl.value;
+      const specs = [...new Set(doctors.map(d => d.specialization).filter(Boolean))].sort();
+      specEl.innerHTML = '<option value="">All Specializations</option>';
+      specs.forEach(s => {
+        const o = document.createElement("option");
+        o.value = s;
+        o.textContent = s;
+        specEl.appendChild(o);
+      });
+      if (curSpec) specEl.value = curSpec;
+    }
+
+    function populatePatientSelect(patients) {
+      const el = document.getElementById("tr-patient");
+      const cur = el.value;
+      el.innerHTML = '<option value="">All Patients</option>';
+      patients.forEach(p => {
+        const o = document.createElement("option");
+        o.value = p._id;
+        o.textContent = p.name;
+        el.appendChild(o);
+      });
+      if (cur) el.value = cur;
+    }
+
+    /* ══════════════════════════════════════
+       OVERVIEW PANEL
+    ══════════════════════════════════════ */
+    async function loadOverview() {
+      const start = document.getElementById("ov-start").value;
+      const end   = document.getElementById("ov-end").value;
+      if (!start || !end) { toast("Select date range", "error"); return; }
+
+      setLoading(true);
+      try {
+        const [report, patients, transactions] = await Promise.all([
+          fetchReport(start, end),
+          fetchPatients(),
+          fetchTransactions()
+        ]);
+
+        if (!report) { toast("Failed to load report", "error"); return; }
+
+        const ps = report.patientsByStatus || {};
+        const txAmt = report.transactionAmountByStatus || {};
+        const txCnt = report.transactionsByStatus || {};
+
+        const total   = Object.values(ps).reduce((a, b) => a + b, 0);
+        const waiting = ps.waiting || 0;
+        const active  = ps["in-consultation"] || 0;
+        const done    = ps.completed || 0;
+
+        document.getElementById("kpi-total").textContent   = total;
+        document.getElementById("kpi-waiting").textContent = waiting;
+        document.getElementById("kpi-active").textContent  = active;
+        document.getElementById("kpi-done").textContent    = done;
+        document.getElementById("kpi-done-rate").textContent =
+          total > 0 ? `${((done / total) * 100).toFixed(0)}% completion` : "no data";
+
+        const grossRev    = Object.values(txAmt).reduce((a, b) => a + b, 0);
+        const collected   = txAmt.completed  || 0;
+        const pendingAmt  = txAmt.pending    || 0;
+        const cancelledAmt= txAmt.cancelled  || 0;
+
+        document.getElementById("kpi-rev").textContent       = fmtINR(grossRev);
+        document.getElementById("kpi-collected").textContent = fmtINR(collected);
+        document.getElementById("kpi-pending").textContent   = fmtINR(pendingAmt);
+        document.getElementById("kpi-cancelled").textContent = fmtINR(cancelledAmt);
+
+        // Patient flow bars
+        renderBars("ov-patient-chart", [
+          ["Waiting",   waiting],
+          ["Active",    active],
+          ["Completed", done]
+        ], "");
+
+        // Revenue bars
+        const revEntries = Object.entries(txAmt)
+          .filter(([, v]) => v > 0)
+          .map(([k, v]) => [k.charAt(0).toUpperCase() + k.slice(1), Math.round(v)]);
+        renderBars("ov-revenue-chart", revEntries, "warn", fmtINR);
+
+        // Priority breakdown from all patients
+        const prio3 = patients.filter(p => p.priority === 3).length;
+        const prio2 = patients.filter(p => p.priority === 2).length;
+        const prio1 = patients.filter(p => p.priority === 1).length;
+        const prioTotal = prio3 + prio2 + prio1;
+
+        const prioEl = document.getElementById("ov-priority-chart");
+        if (prioTotal === 0) {
+          prioEl.innerHTML = '<div class="empty-state">No patient data</div>';
+        } else {
+          prioEl.innerHTML = `
+            <div class="bar-chart">
+              <div class="bar-row">
+                <div class="bar-label">Emergency</div>
+                <div class="bar-track"><div class="bar-fill danger" data-pct="${(prio3/prioTotal*100).toFixed(1)}"></div></div>
+                <div class="bar-val">${prio3} <span style="color:var(--muted);font-size:10px">(${(prio3/prioTotal*100).toFixed(0)}%)</span></div>
+              </div>
+              <div class="bar-row">
+                <div class="bar-label">Urgent</div>
+                <div class="bar-track"><div class="bar-fill warn" data-pct="${(prio2/prioTotal*100).toFixed(1)}"></div></div>
+                <div class="bar-val">${prio2} <span style="color:var(--muted);font-size:10px">(${(prio2/prioTotal*100).toFixed(0)}%)</span></div>
+              </div>
+              <div class="bar-row">
+                <div class="bar-label">Normal</div>
+                <div class="bar-track"><div class="bar-fill" data-pct="${(prio1/prioTotal*100).toFixed(1)}"></div></div>
+                <div class="bar-val">${prio1} <span style="color:var(--muted);font-size:10px">(${(prio1/prioTotal*100).toFixed(0)}%)</span></div>
+              </div>
+            </div>`;
+          requestAnimationFrame(() => {
+            prioEl.querySelectorAll(".bar-fill").forEach(b => b.style.width = b.dataset.pct + "%");
+          });
+        }
+        document.getElementById("ov-priority-meta").textContent =
+          `${prioTotal} total patients · all time`;
+
+        toast("Overview loaded", "success");
+      } catch(e) {
+        toast("Error loading overview", "error");
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    /* ══════════════════════════════════════
+       QUEUE ANALYTICS PANEL
+    ══════════════════════════════════════ */
+    function resetQueueFilters() {
+      document.getElementById("q-doctor").value   = "";
+      document.getElementById("q-status").value   = "";
+      document.getElementById("q-priority").value = "";
+    }
+
+    async function loadQueueAnalytics() {
+      const doctorFilter   = document.getElementById("q-doctor").value;
+      const statusFilter   = document.getElementById("q-status").value;
+      const priorityFilter = document.getElementById("q-priority").value;
+
+      const params = {};
+      if (doctorFilter)   params.doctorAssigned = doctorFilter;
+      if (statusFilter)   params.status = statusFilter;
+
+      setLoading(true);
+      try {
+        let patients = await fetchPatients(params);
+
+        if (priorityFilter) {
+          patients = patients.filter(p => String(p.priority) === priorityFilter);
+        }
+
+        // KPIs
+        const emergency = patients.filter(p => p.priority === 3).length;
+        const urgent    = patients.filter(p => p.priority === 2).length;
+        const normal    = patients.filter(p => p.priority === 1).length;
+        const active    = patients.filter(p => p.status === "waiting" || p.status === "in-consultation").length;
+
+        document.getElementById("q-kpi-emergency").textContent = emergency;
+        document.getElementById("q-kpi-urgent").textContent    = urgent;
+        document.getElementById("q-kpi-normal").textContent    = normal;
+        document.getElementById("q-kpi-total").textContent     = active;
+
+        // Queue by doctor
+        const byDoc = {};
+        patients.forEach(p => {
+          const docName = p.doctorAssigned?.name || "Unassigned";
+          byDoc[docName] = (byDoc[docName] || 0) + 1;
+        });
+        const docEntries = Object.entries(byDoc).sort((a, b) => b[1] - a[1]);
+        renderBars("q-by-doctor-chart", docEntries, "info");
+
+        // Status bars
+        const byStatus = { waiting: 0, "in-consultation": 0, completed: 0 };
+        patients.forEach(p => { byStatus[p.status] = (byStatus[p.status] || 0) + 1; });
+        renderBars("q-status-chart", [
+          ["Waiting",   byStatus.waiting],
+          ["Active",    byStatus["in-consultation"]],
+          ["Completed", byStatus.completed]
+        ]);
+
+        // Table
+        document.getElementById("q-table-meta").textContent = `${patients.length} patients`;
+        const wrap = document.getElementById("q-table-wrap");
+        if (!patients.length) {
+          wrap.innerHTML = '<div class="empty-state">No patients match the selected filters</div>';
+        } else {
+          const sorted = [...patients].sort((a, b) => b.priority - a.priority || new Date(a.checkInTime) - new Date(b.checkInTime));
+          wrap.innerHTML = `
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Patient</th>
+                  <th>Age</th>
+                  <th>Complaint</th>
+                  <th>Priority</th>
+                  <th>Status</th>
+                  <th>Doctor</th>
+                  <th>Check-in</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${sorted.map(p => `
+                  <tr>
+                    <td><strong>${p.name}</strong></td>
+                    <td style="font-family:'DM Mono',monospace;color:var(--muted)">${p.age}y</td>
+                    <td style="color:var(--muted);font-size:12px">${p.complaint}</td>
+                    <td>${priorityBadge(p.priority)}</td>
+                    <td>${statusBadge(p.status)}</td>
+                    <td>${p.doctorAssigned?.name ? "Dr. " + p.doctorAssigned.name : '<span style="color:var(--muted)">—</span>'}</td>
+                    <td style="color:var(--muted);font-size:11px;font-family:'DM Mono',monospace">
+                      ${new Date(p.checkInTime).toLocaleString("en-IN", {day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}
+                    </td>
+                  </tr>`).join("")}
+              </tbody>
+            </table>`;
+        }
+        toast("Queue loaded", "success");
+      } catch(e) {
+        toast("Error loading queue", "error");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    /* ══════════════════════════════════════
+       DOCTOR PERFORMANCE PANEL
+    ══════════════════════════════════════ */
+    async function loadDoctorPerformance() {
+      const specFilter  = document.getElementById("dp-spec").value;
+      const availFilter = document.getElementById("dp-avail").value;
+
+      setLoading(true);
+      try {
+        let doctors = [...allDoctors];
+        if (specFilter)  doctors = doctors.filter(d => d.specialization === specFilter);
+        if (availFilter !== "") doctors = doctors.filter(d => String(d.isAvailable) === availFilter);
+
+        // Fetch all patients to compute per-doctor stats
+        const patients = await fetchPatients();
+
+        const avail   = doctors.filter(d => d.isAvailable).length;
+        const unavail = doctors.filter(d => !d.isAvailable).length;
+        const specs   = [...new Set(doctors.map(d => d.specialization))].length;
+
+        document.getElementById("dp-kpi-total").textContent  = doctors.length;
+        document.getElementById("dp-kpi-avail").textContent  = avail;
+        document.getElementById("dp-kpi-unavail").textContent = unavail;
+        document.getElementById("dp-kpi-specs").textContent  = specs;
+
+        // Per-doctor queue depths
+        const docQueue = {};
+        patients.forEach(p => {
+          const did = p.doctorAssigned?._id || p.doctorAssigned;
+          if (!did) return;
+          if (!docQueue[did]) docQueue[did] = { total: 0, waiting: 0, active: 0, done: 0 };
+          docQueue[did].total++;
+          if (p.status === "waiting")        docQueue[did].waiting++;
+          if (p.status === "in-consultation") docQueue[did].active++;
+          if (p.status === "completed")       docQueue[did].done++;
+        });
+
+        const maxPatients = Math.max(1, ...doctors.map(d => docQueue[d._id]?.total || 0));
+
+        const listEl = document.getElementById("dp-doctor-list");
+        if (!doctors.length) {
+          listEl.innerHTML = '<div class="empty-state">No doctors match the selected filters</div>';
+        } else {
+          listEl.innerHTML = doctors.map(d => {
+            const q = docQueue[d._id] || { total: 0, waiting: 0, active: 0, done: 0 };
+            const pct = (q.total / maxPatients * 100).toFixed(1);
+            const initials = d.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+            return `
+              <div class="doctor-perf-row">
+                <div class="doc-avatar">${initials}</div>
+                <div class="doc-info">
+                  <div class="doc-name">Dr. ${d.name}</div>
+                  <div class="doc-spec">${d.specialization || "—"} · ${d.isAvailable ? '<span style="color:var(--accent)">Available</span>' : '<span style="color:var(--muted)">Unavailable</span>'}</div>
+                </div>
+                <div class="doc-stats">
+                  <div class="doc-stat">
+                    <div class="doc-stat-val" style="color:var(--warn)">${q.waiting}</div>
+                    <div class="doc-stat-label">Waiting</div>
+                  </div>
+                  <div class="doc-stat">
+                    <div class="doc-stat-val" style="color:var(--info)">${q.active}</div>
+                    <div class="doc-stat-label">Active</div>
+                  </div>
+                  <div class="doc-stat">
+                    <div class="doc-stat-val" style="color:var(--accent)">${q.done}</div>
+                    <div class="doc-stat-label">Done</div>
+                  </div>
+                </div>
+                <div class="doc-bar-wrap">
+                  <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-align:right">${q.total} total</div>
+                  <div class="doc-bar-track">
+                    <div class="doc-bar-fill" style="width:${pct}%"></div>
+                  </div>
+                </div>
+              </div>`;
+          }).join("");
+        }
+
+        // By specialization
+        const bySpec = {};
+        doctors.forEach(d => {
+          const s = d.specialization || "Other";
+          bySpec[s] = (bySpec[s] || 0) + 1;
+        });
+        renderBars("dp-spec-chart", Object.entries(bySpec).sort((a, b) => b[1] - a[1]), "info");
+
+        // Availability donut-style bars
+        const availEl = document.getElementById("dp-avail-chart");
+        if (doctors.length) {
+          const availPct = (avail / doctors.length * 100).toFixed(1);
+          availEl.innerHTML = `
+            <div class="bar-chart">
+              <div class="bar-row">
+                <div class="bar-label">Available</div>
+                <div class="bar-track"><div class="bar-fill" data-pct="${availPct}"></div></div>
+                <div class="bar-val">${avail}</div>
+              </div>
+              <div class="bar-row">
+                <div class="bar-label">Unavailable</div>
+                <div class="bar-track"><div class="bar-fill danger" data-pct="${(100 - parseFloat(availPct)).toFixed(1)}"></div></div>
+                <div class="bar-val">${unavail}</div>
+              </div>
+            </div>`;
+          requestAnimationFrame(() => {
+            availEl.querySelectorAll(".bar-fill").forEach(b => b.style.width = b.dataset.pct + "%");
+          });
+        } else {
+          availEl.innerHTML = '<div class="empty-state">No data</div>';
+        }
+
+        toast("Doctor data loaded", "success");
+      } catch(e) {
+        toast("Error loading doctor data", "error");
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    /* ══════════════════════════════════════
+       FINANCE PANEL
+    ══════════════════════════════════════ */
+    async function loadFinance() {
+      const start  = document.getElementById("fin-start").value;
+      const end    = document.getElementById("fin-end").value;
+      const status = document.getElementById("fin-status").value;
+      const doctor = document.getElementById("fin-doctor").value;
+
+      const params = {};
+      if (status) params.status = status;
+      if (doctor) params.doctor = doctor;
+
+      setLoading(true);
+      try {
+        const txs = await fetchTransactions(params);
+
+        // Filter by date client-side
+        const filtered = txs.filter(t => {
+          if (!t.transactionDate) return true;
+          const d = t.transactionDate.split("T")[0];
+          return (!start || d >= start) && (!end || d <= end);
+        });
+
+        const gross     = filtered.reduce((a, t) => a + (t.amount || 0), 0);
+        const collected = filtered.filter(t => t.status === "completed").reduce((a, t) => a + (t.amount || 0), 0);
+        const pending   = filtered.filter(t => t.status === "pending").reduce((a, t) => a + (t.amount || 0), 0);
+
+        document.getElementById("fin-kpi-gross").textContent   = fmtINR(gross);
+        document.getElementById("fin-kpi-net").textContent     = fmtINR(collected);
+        document.getElementById("fin-kpi-pending").textContent = fmtINR(pending);
+        document.getElementById("fin-kpi-count").textContent   = filtered.length;
+
+        // Revenue by doctor
+        const byDoc = {};
+        filtered.forEach(t => {
+          const k = t.doctor?.name || "Unknown";
+          byDoc[k] = (byDoc[k] || 0) + (t.amount || 0);
+        });
+        renderBars("fin-by-doctor",
+          Object.entries(byDoc).sort((a, b) => b[1] - a[1]).map(([k, v]) => [k, Math.round(v)]),
+          "warn", fmtINR);
+
+        // Status mix
+        const byStatus = { completed: 0, pending: 0, cancelled: 0 };
+        filtered.forEach(t => { byStatus[t.status] = (byStatus[t.status] || 0) + (t.amount || 0); });
+        renderBars("fin-status-chart", [
+          ["Completed", Math.round(byStatus.completed)],
+          ["Pending",   Math.round(byStatus.pending)],
+          ["Cancelled", Math.round(byStatus.cancelled)]
+        ], "", fmtINR);
+
+        // Top patients
+        const byPatient = {};
+        filtered.forEach(t => {
+          const k = t.patient?.name || "Unknown";
+          byPatient[k] = (byPatient[k] || 0) + (t.amount || 0);
+        });
+        renderBars("fin-top-patients",
+          Object.entries(byPatient).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, v]) => [k, Math.round(v)]),
+          "info", fmtINR);
+
+        toast("Finance loaded", "success");
+      } catch(e) {
+        toast("Error loading finance", "error");
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    /* ══════════════════════════════════════
+       PATIENT REPORT PANEL
+    ══════════════════════════════════════ */
+    async function loadPatientReport() {
+      const status = document.getElementById("pr-status").value;
+      const doctor = document.getElementById("pr-doctor").value;
+
+      const params = {};
+      if (status) params.status = status;
+      if (doctor) params.doctorAssigned = doctor;
+
+      setLoading(true);
+      try {
+        const patients = await fetchPatients(params);
+
+        const waiting = patients.filter(p => p.status === "waiting").length;
+        const active  = patients.filter(p => p.status === "in-consultation").length;
+        const done    = patients.filter(p => p.status === "completed").length;
+
+        document.getElementById("pr-kpi-total").textContent   = patients.length;
+        document.getElementById("pr-kpi-waiting").textContent = waiting;
+        document.getElementById("pr-kpi-active").textContent  = active;
+        document.getElementById("pr-kpi-done").textContent    = done;
+        document.getElementById("pr-table-meta").textContent  = `${patients.length} records`;
+
+        const wrap = document.getElementById("pr-table-wrap");
+        if (!patients.length) {
+          wrap.innerHTML = '<div class="empty-state">No patients match the filters</div>';
+        } else {
+          const sorted = [...patients].sort((a, b) => b.priority - a.priority || new Date(a.checkInTime) - new Date(b.checkInTime));
+          wrap.innerHTML = `
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Name</th><th>Age</th><th>Complaint</th>
+                  <th>Priority</th><th>Status</th><th>Doctor</th><th>Check-in</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${sorted.map(p => `
+                  <tr>
+                    <td><strong>${p.name}</strong></td>
+                    <td style="font-family:'DM Mono',monospace;color:var(--muted)">${p.age}y</td>
+                    <td style="color:var(--muted);font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.complaint}</td>
+                    <td>${priorityBadge(p.priority)}</td>
+                    <td>${statusBadge(p.status)}</td>
+                    <td>${p.doctorAssigned?.name ? "Dr. " + p.doctorAssigned.name : '<span style="color:var(--muted)">—</span>'}</td>
+                    <td style="color:var(--muted);font-size:11px;font-family:'DM Mono',monospace">
+                      ${new Date(p.checkInTime).toLocaleString("en-IN", {day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}
+                    </td>
+                  </tr>`).join("")}
+              </tbody>
+            </table>`;
+        }
+        toast("Patient report loaded", "success");
+      } catch(e) {
+        toast("Error loading patients", "error");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    /* ══════════════════════════════════════
+       TRANSACTIONS REPORT PANEL
+    ══════════════════════════════════════ */
+    function resetTxFilters() {
+      document.getElementById("tr-status").value  = "";
+      document.getElementById("tr-doctor").value  = "";
+      document.getElementById("tr-patient").value = "";
+    }
+
+    async function loadTransactionReport() {
+      const status  = document.getElementById("tr-status").value;
+      const doctor  = document.getElementById("tr-doctor").value;
+      const patient = document.getElementById("tr-patient").value;
+
+      const params = {};
+      if (status)  params.status  = status;
+      if (doctor)  params.doctor  = doctor;
+      if (patient) params.patient = patient;
+
+      setLoading(true);
+      try {
+        const txs = await fetchTransactions(params);
+
+        const completed = txs.filter(t => t.status === "completed").length;
+        const pending   = txs.filter(t => t.status === "pending").length;
+        const cancelled = txs.filter(t => t.status === "cancelled").length;
+
+        document.getElementById("tr-kpi-total").textContent     = txs.length;
+        document.getElementById("tr-kpi-completed").textContent = completed;
+        document.getElementById("tr-kpi-pending").textContent   = pending;
+        document.getElementById("tr-kpi-cancelled").textContent = cancelled;
+        document.getElementById("tr-table-meta").textContent    = `${txs.length} records`;
+
+        const wrap = document.getElementById("tr-table-wrap");
+        if (!txs.length) {
+          wrap.innerHTML = '<div class="empty-state">No transactions match the filters</div>';
+        } else {
+          const sorted = [...txs].sort((a, b) => new Date(b.transactionDate) - new Date(a.transactionDate));
+          wrap.innerHTML = `
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Patient</th><th>Doctor</th><th>Amount</th>
+                  <th>Status</th><th>Date</th><th>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${sorted.map(t => `
+                  <tr>
+                    <td><strong>${t.patient?.name || "—"}</strong></td>
+                    <td>${t.doctor?.name ? "Dr. " + t.doctor.name : '<span style="color:var(--muted)">—</span>'}</td>
+                    <td style="font-family:'DM Mono',monospace;color:var(--accent)">${fmtINR(t.amount || 0)}</td>
+                    <td>${statusBadge(t.status)}</td>
+                    <td style="color:var(--muted);font-size:11px;font-family:'DM Mono',monospace">
+                      ${t.transactionDate ? new Date(t.transactionDate).toLocaleDateString("en-IN", {day:"2-digit",month:"short",year:"numeric"}) : "—"}
+                    </td>
+                    <td style="color:var(--muted);font-size:12px">${t.notes || "—"}</td>
+                  </tr>`).join("")}
+              </tbody>
+            </table>`;
+        }
+        toast("Transactions loaded", "success");
+      } catch(e) {
+        toast("Error loading transactions", "error");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    /* ══════════════════════════════════════
+       REFRESH ALL
+    ══════════════════════════════════════ */
+    async function refreshAll() {
+      try {
+        const [docs, patients] = await Promise.all([fetchDoctors(), fetchPatients()]);
+        allDoctors  = docs;
+        allPatients = patients;
+        populateDoctorSelects(docs);
+        populatePatientSelect(patients);
+        // Reload active panel
+        const activePanel = document.querySelector(".panel.active")?.id?.replace("panel-", "");
+        const loaders = {
+          overview:     loadOverview,
+          queue:        loadQueueAnalytics,
+          doctors:      loadDoctorPerformance,
+          finance:      loadFinance,
+          patients:     loadPatientReport,
+          transactions: loadTransactionReport
+        };
+        if (loaders[activePanel]) loaders[activePanel]();
+      } catch(e) {
+        toast("Refresh failed", "error");
+      }
+    }
+
+    /* ══════════════════════════════════════
+       INIT
+    ══════════════════════════════════════ */
+    window.onload = async () => {
+      // Set default date ranges
+      resetDates("ov-start",  "ov-end",  30);
+      resetDates("fin-start", "fin-end", 30);
+
+      setLoading(true);
+      try {
+        const [docs, patients] = await Promise.all([fetchDoctors(), fetchPatients()]);
+        allDoctors  = docs;
+        allPatients = patients;
+        populateDoctorSelects(docs);
+        populatePatientSelect(patients);
+        await loadOverview();
+      } catch(e) {
+        toast("Failed to initialise — is the server running?", "error");
+      } finally {
+        setLoading(false);
+      }
+    };
+  </script>
+</body>
+</html>

@@ -6,6 +6,6 @@ const roleCheck = require("../middleware/roleMiddleware");
 const reportController = require("../controllers/reportController");
 
 // GET /reports/summary?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
-router.get("/summary", auth, roleCheck("receptionist", "doctor"), reportController.getSummaryReport);
+router.get("/summary", auth, roleCheck("receptionist", "doctor","admin"), reportController.getSummaryReport);
 
 module.exports = router;

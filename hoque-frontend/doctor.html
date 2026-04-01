@@ -38,6 +38,34 @@
       text-transform: uppercase;
       letter-spacing: 1.5px;
     }
+    .sidebar-nav {
+  flex: 1;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted);
+  transition: background 0.15s, color 0.15s;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.nav-item:hover { background: var(--elevated); color: var(--text); }
+.nav-item.active { background: var(--accent-dim); color: var(--accent); }
 
     .sidebar-footer { padding: 16px 12px; border-top: 1px solid var(--border); margin-top: auto; }
     .logout-btn {
